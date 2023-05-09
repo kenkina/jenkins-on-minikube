@@ -1,18 +1,8 @@
 <br />
 <div align="center">
   <h1 align="center">Jenkins on Minikube</h1>
-  <p align="center">
-    A local Jenkins instance for testing purposes on Minikube
-  </p>
 </div>
 
-
-## 0. Notes
-
-- Security
--  approvedHostKeys ~/.ssh/known_hosts
-
-[GitHub's SSH key fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints)
 
 
 ## SH commands
