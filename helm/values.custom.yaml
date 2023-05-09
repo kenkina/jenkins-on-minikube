@@ -1,0 +1,104 @@
+controller:
+  # Used for label app.kubernetes.io/component
+  componentName: "jenkins-controller"
+  image: "kenkina/jenkins-on-minikube"
+  tag: 2.387.2-lts-jdk17
+  tagLabel: jdk11
+  imagePullPolicy: "IfNotPresent"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "2000m"
+      memory: "4096Mi"
+  servicePort: 8080
+  targetPort: 8080
+
+  # If you set this prefix and use ingress controller then you might want to set the ingress path below
+  jenkinsUriPrefix: "/jenkins"
+
+  # For minikube, set this to NodePort, elsewhere use LoadBalancer
+  # Use ClusterIP if your setup includes ingress controller
+  serviceType: ClusterIP
+
+  # List of plugins to be install during Jenkins controller start
+  installPlugins: false
+
+  # 'name' is a name of an existing secret in same namespace as jenkins,
+  # 'keyName' is the name of one of the keys inside current secret.
+  # the 'name' and 'keyName' are concatenated with a '-' in between, so for example:
+  # an existing secret "secret-credentials" and a key inside it named "github-password" should be used in Jcasc as ${secret-credentials-github-password}
+  # 'name' and 'keyName' must be lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-',
+  # and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc')
+  # existingSecret existing secret "secret-credentials" and a key inside it named "github-username" should be used in Jcasc as ${github-username}
+  # When using existingSecret no need to specify the keyName under additionalExistingSecrets.
+  existingSecret: secret-jenkins
+
+  additionalExistingSecrets:
+    - name: secret-jenkins
+      keyName: demo
+    - name: secret-jenkins
+      keyName: github-ssh-key-private
+    - name: secret-jenkins
+      keyName: github-ssh-key-passphrase
+    - name: secret-jenkins
+      keyName: kube-config
+
+  # Below is the implementation of Jenkins Configuration as Code.  Add a key under configScripts for each configuration area,
+  # where each corresponds to a plugin or section of the UI.  Each key (prior to | character) is just a label, and can be any value.
+  # Keys are only used to give the section a meaningful name.  The only restriction is they may only contain RFC 1123 \ DNS label
+  # characters: lowercase letters, numbers, and hyphens.  The keys become the name of a configuration yaml file on the controller in
+  # /var/jenkins_home/casc_configs (by default) and will be processed by the Configuration as Code Plugin.  The lines after each |
+  # become the content of the configuration yaml file.  The first line after this is a JCasC root element, eg jenkins, credentials,
+  # etc.  Best reference is https://<jenkins_url>/configuration-as-code/reference.  The example below creates a welcome message:
+  JCasC:
+    defaultConfig: true
+
+  ingress:
+    enabled: true
+    paths:
+      - pathType: Prefix
+        path: "/jenkins"
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
+    apiVersion: "networking.k8s.io/v1"
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/add-base-url: "true"
+
+agent:
+  enabled: true
+  image: "jenkins/inbound-agent"
+  tag: "3107.v665000b_51092-5"
+  resources:
+    requests:
+      cpu: "512m"
+      memory: "512Mi"
+    limits:
+      cpu: "512m"
+      memory: "512Mi"
+  # You may want to change this to true while testing a new image
+  alwaysPullImage: false
+  # Controls how agent pods are retained after the Jenkins build completes
+  # Possible values: Always, Never, OnFailure
+  podRetention: "OnFailure"
+  # Disable if you do not want the Yaml the agent pod template to show up
+  # in the job Console Output. This can be helpful for either security reasons
+  # or simply to clean up the output to make it easier to read.
+  showRawYaml: false
+  # Allows the Pod to remain active for reuse until the configured number of
+  # minutes has passed since the last step was executed on it.
+  idleMinutes: 5
+# Here you can add additional agents
+# They inherit all values from `agent` so you only need to specify values which differ
+#additionalAgents:
+#  maven:
+#    podName: maven
+#    customJenkinsLabels: maven
+#    image: kenkina/jenkins-inbound-maven-agent
+#    tag: 3107.v665000b_51092-5-alpine-jdk17

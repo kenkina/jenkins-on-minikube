@@ -1,0 +1,32 @@
+controller:
+  JCasC:
+    configScripts:
+      security: |
+        credentials:
+          system:
+            domainCredentials:
+            - credentials:
+              - basicSSHUserPrivateKey:
+                  scope: GLOBAL
+                  id: jenkins-local-github-ssh-key-private
+                  description: "[LOCAL] Github SSH Key Private"
+                  username: jenkins-local-github-ssh-key-private
+                  passphrase: ${secret-jenkins-github-ssh-key-passphrase}
+                  privateKeySource:
+                    directEntry:
+                      privateKey: |
+                        ${secret-jenkins-github-ssh-key-private}
+              - file:
+                  scope: GLOBAL
+                  id: "jenkins-local-k8s-kube-config"
+                  description: "[LOCAL] Minikube KUBE_CONFIG"
+                  fileName: "config"
+                  secretBytes: "${base64:${secret-jenkins-kube-config}}"
+        security:
+          gitHostKeyVerificationConfiguration:
+            sshHostKeyVerificationStrategy:
+              manuallyProvidedKeyVerificationStrategy:
+                approvedHostKeys: |-
+                  github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+          globalJobDslSecurityConfiguration:
+            useScriptSecurity: false

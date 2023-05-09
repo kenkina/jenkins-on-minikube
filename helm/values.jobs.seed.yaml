@@ -1,0 +1,27 @@
+controller:
+  JCasC:
+    configScripts:
+      jobs: |
+        jobs:
+          - script: >
+              folder("_seed-job")
+          - script: >
+              pipelineJob("_seed-job/seed-job") {
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote {
+                          url("git@github.com:kenkina/jenkins-on-minikube.git")
+                          credentials("jenkins-local-github-ssh-key-private")
+                        }
+                        branches("*/feature/init")
+                      }
+                    }
+                    scriptPath("pipelines/_seed-job/Jenkinsfile")
+                    lightweight(false)
+                  }
+                }
+              }
+          - script: >
+              queue('_seed-job/seed-job')

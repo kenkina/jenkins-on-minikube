@@ -1,0 +1,75 @@
+
+folder('demo')
+
+pipelineJob('demo/demo-backend-java8') {
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url('git@github.com:kenkina/jenkins-on-minikube.git')
+                        credentials('jenkins-local-github-ssh-key-private')
+                    }
+                    branches('*/feature/init')
+                }
+            }
+            scriptPath('pipelines/demo/demo-backend-java8/Jenkinsfile')
+            lightweight(false)
+        }
+    }
+}
+
+pipelineJob('demo/demo-maven3-java17') {
+    String repo = 'https://github.com/path/to/your/repo.git'
+    description("Pipeline for $repo \n This job works with Maven additional agents (jenkins-inbound-maven-agent)")
+
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url('git@github.com:kenkina/jenkins-on-minikube.git')
+                        credentials('jenkins-local-github-ssh-key-private')
+                    }
+                    branches('*/feature/init')
+                }
+            }
+            scriptPath('pipelines/demo/demo-maven3-java17/Jenkinsfile')
+            lightweight(false)
+        }
+    }
+}
+
+pipelineJob('demo/demo-simple') {
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url('git@github.com:kenkina/jenkins-on-minikube.git')
+                        credentials('jenkins-local-github-ssh-key-private')
+                    }
+                    branches('*/feature/init')
+                }
+            }
+            scriptPath('pipelines/demo/demo-simple/Jenkinsfile')
+            lightweight(false)
+        }
+    }
+}
+
+listView('demo-view') {
+    description('Demo view')
+    jobs {
+        regex(/demo/)
+    }
+    columns {
+        status()
+        weather()
+        name()
+        lastSuccess()
+        lastFailure()
+        lastDuration()
+        buildButton()
+    }
+}

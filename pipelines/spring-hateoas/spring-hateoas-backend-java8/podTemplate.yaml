@@ -1,0 +1,48 @@
+# Based on https://github.com/jenkinsci/kubernetes-plugin/blob/master/examples/kaniko.groovy
+
+metadata:
+  labels:
+    label: value
+spec:
+  securityContext:
+    runAsUser: 0 # default UID of jenkins user in agent image
+  containers:
+    - name: maven3-java8
+      image: maven:3.9.1-eclipse-temurin-8-alpine
+      imagePullPolicy: IfNotPresent
+      command:
+        - sleep
+      args:
+        - 99d
+      volumeMounts:
+        - name: pvc-maven-repo
+          mountPath: "/root/.m2/repository"
+    - name: kaniko
+      image: kenkina/jenkins-container-tools:v1.9.2.1
+      imagePullPolicy: IfNotPresent
+      command:
+        - sleep
+      args:
+        - 99d
+      volumeMounts:
+        - name: pvc-docker-cfg
+          mountPath: /kaniko/.docker
+    - name: kubectl
+      image: bitnami/kubectl:1.27.1
+      imagePullPolicy: IfNotPresent
+      command:
+        - sleep
+      args:
+        - 99d
+  volumes:
+    - name: pvc-maven-repo
+      persistentVolumeClaim:
+        claimName: pvc-maven-repo
+    - name: pvc-docker-cfg
+      projected:
+        sources:
+          - secret:
+              name: regcred
+              items:
+                - key: .dockerconfigjson
+                  path: config.json

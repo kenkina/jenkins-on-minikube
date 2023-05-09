@@ -1,0 +1,20 @@
+final String COMPONENT_BASE_PATH = 'pipelines/_seed-job'
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Create jobs') {
+            steps {
+                dir("$COMPONENT_BASE_PATH") {
+                    jobDsl(
+                        lookupStrategy: 'JENKINS_ROOT',
+                        removedJobAction: 'DISABLE',
+                        removedViewAction: 'DELETE',
+                        targets: './*/Jenkinsfile'
+                    )
+                }
+            }
+        }
+    }
+}

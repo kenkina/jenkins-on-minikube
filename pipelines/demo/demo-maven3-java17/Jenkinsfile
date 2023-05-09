@@ -1,0 +1,18 @@
+pipeline {
+    agent {
+        kubernetes {
+            inheritFrom 'maven'
+        }
+    }
+    stages {
+        stage('commands') {
+            steps {
+                script {
+                    sh 'ls -lah'
+                    sh 'mvn --version'
+                }
+            }
+        }
+    }
+}
+

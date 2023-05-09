@@ -1,0 +1,11 @@
+controller:
+  JCasC:
+    configScripts:
+      system: |
+        jenkins:
+          systemMessage: Welcome! This Jenkins is configured and managed 'as code' (JCasC).
+          globalNodeProperties:
+          - envVars:
+              env:
+              - key: GLOBAL_DEMO
+                value: ${secret-jenkins-demo}

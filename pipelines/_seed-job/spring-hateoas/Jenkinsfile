@@ -1,0 +1,19 @@
+folder('spring-hateoas')
+
+pipelineJob('spring-hateoas/spring-hateoas-backend-java8') {
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url('git@github.com:kenkina/jenkins-on-minikube.git')
+                        credentials('jenkins-local-github-ssh-key-private')
+                    }
+                    branches('*/feature/init')
+                }
+            }
+            scriptPath('pipelines/spring-hateoas/spring-hateoas-backend-java8/Jenkinsfile')
+            lightweight(false)
+        }
+    }
+}

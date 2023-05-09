@@ -1,0 +1,26 @@
+metadata:
+  labels:
+    label: value
+spec:
+  containers:
+    - name: jnlp
+      env:
+        - name: CONTAINER_TYPE
+          value: jnlp
+    - name: maven
+      image: maven:3.9.1-eclipse-temurin-8-alpine
+      command:
+        - sleep
+      args:
+        - 99d
+      env:
+        - name: CONTAINER_TYPE
+          value: maven
+    - name: busybox
+      image: busybox:1.36.0-musl
+      command:
+        - cat
+      tty: true
+      env:
+        - name: CONTAINER_TYPE
+          value: busybox

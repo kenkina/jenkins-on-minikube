@@ -1,0 +1,16 @@
+pipeline {
+    agent any
+    stages {
+        stage('commands') {
+            environment {
+                credFile = credentials('jenkins-local-k8s-kube-config')
+            }
+            steps {
+                script {
+                    String credFileContent = readFile file: env.credFile
+                    echo credFileContent
+                }
+            }
+        }
+    }
+}

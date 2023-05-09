@@ -1,0 +1,87 @@
+pipeline {
+    agent {
+        kubernetes {
+            yamlFile 'pipelines/spring-hateoas/spring-hateoas-backend-java8/podTemplate.yaml'
+        }
+    }
+
+    environment {
+        COMPONENT_SOURCE_PATH = 'spring-hateoas-and-spring-data-rest'
+        DOCKER_IMAGE_REPO = 'kenkina/spring-hateoas-backend-java8'
+    }
+
+    stages {
+        stage('Setup') {
+            steps {
+                checkout scmGit(
+                    branches: [[name: 'feat/devops-jenkins']],
+                    userRemoteConfigs: [[
+                        credentialsId:  'jenkins-local-github-ssh-key-private',
+                        url: 'git@github.com:kenkina/spring-hateoas-backend-java8.git'
+                    ]]
+                )
+
+                container('maven3-java8') {
+                    sh '''
+                        java -version
+                        mvn --version
+                        mvn clean install -DskipTests -q
+                    '''
+                }
+            }
+        }
+
+        stage('Build and publish') {
+            steps {
+                container('maven3-java8') {
+                    sh '''
+                        mvn package -DskipTests -q -f $COMPONENT_SOURCE_PATH/pom.xml
+                        ls -lah $COMPONENT_SOURCE_PATH/target/
+                    '''
+                }
+
+                container('kaniko') {
+                    sh '''
+                        GIT_COMMIT=$(head -c 7 .git/FETCH_HEAD)
+                        TAG="$GIT_COMMIT"
+
+                        echo "Checking if image $DOCKER_IMAGE_REPO:$TAG exists."
+                        # Based on https://github.com/GoogleContainerTools/kaniko/issues/958#issuecomment-1078712894
+
+                        if crane manifest $DOCKER_IMAGE_REPO:$TAG; then
+                            echo "Image already exists. No actions required..."
+                        else
+                            echo "Image does not exist. Building and pushing..."
+
+                            /kaniko/executor version
+                            /kaniko/executor \
+                                --dockerfile $(pwd)/$COMPONENT_SOURCE_PATH/Dockerfile \
+                                --context $(pwd)/$COMPONENT_SOURCE_PATH \
+                                --destination $DOCKER_IMAGE_REPO:$TAG \
+                                --destination $DOCKER_IMAGE_REPO:latest
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                container('kubectl') {
+                    withCredentials([
+                        file(
+                            credentialsId: 'jenkins-local-k8s-kube-config',
+                            variable: 'KUBE_CONFIG'
+                        )
+                    ]) {
+                        sh '''
+                            cat $KUBE_CONFIG > ~/.kube/config
+                            kubectl version -oyaml --client
+                            kubectl apply -f $COMPONENT_SOURCE_PATH/k8s/
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+# Based on https://github.com/jenkinsci/kubernetes-plugin/blob/master/examples/maven-with-cache-pvc.yml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-maven-repo
+  namespace: devops-jenkins
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

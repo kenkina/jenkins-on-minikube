@@ -1,0 +1,42 @@
+final String COMPONENT_BASE_PATH = 'pipelines/demo/demo-backend-java8'
+
+pipeline {
+    agent {
+        kubernetes {
+            yamlFile "$COMPONENT_BASE_PATH/podTemplate.yaml"
+        }
+    }
+
+    stages {
+        stage('Build outside') {
+            steps {
+                sh """
+                    echo "CONTAINER_TYPE: $CONTAINER_TYPE"
+                """
+            }
+        }
+
+        stage('Build on containers') {
+            parallel {
+                stage('Build on maven') {
+                    steps {
+                        container('maven') {
+                            dir("$COMPONENT_BASE_PATH") {
+                                sh 'sh ./build_maven.sh 10'
+                            }
+                        }
+                    }
+                }
+                stage('Build on busybox') {
+                    steps {
+                        container('busybox') {
+                            dir("$COMPONENT_BASE_PATH") {
+                                sh 'sh ./build_busybox.sh 3'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
